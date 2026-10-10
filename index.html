@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Photo Puzzle Maker</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="logo">🧩 Photo Puzzle Maker</h1>
+
+    <div class="controls">
+      <label class="btn btn-photo">
+        📷 Choose photo
+        <input type="file" id="fileInput" accept="image/*" hidden />
+      </label>
+      <button type="button" class="btn btn-ghost" id="sampleBtn">🌈 Sample picture</button>
+
+      <div class="count-group" role="group" aria-label="Number of pieces">
+        <span class="count-label">Pieces:</span>
+        <button type="button" class="chip" data-count="25">25</button>
+        <button type="button" class="chip is-active" data-count="50">50</button>
+        <button type="button" class="chip" data-count="75">75</button>
+        <button type="button" class="chip" data-count="100">100</button>
+      </div>
+
+      <button type="button" class="btn btn-go" id="startBtn" disabled>▶ Make puzzle</button>
+      <button type="button" class="btn btn-ghost" id="shuffleBtn" disabled>🔀 Shuffle</button>
+      <button type="button" class="btn btn-ghost" id="peekBtn" disabled aria-pressed="false">👀 Peek</button>
+    </div>
+
+    <div class="status"><span id="statusText">Pick a photo to start!</span></div>
+  </header>
+
+  <main id="stageWrap">
+    <div id="stage">
+      <div id="board"><canvas id="ghost"></canvas></div>
+      <div id="piecesLayer"></div>
+    </div>
+
+    <div id="dropHint" class="drop-hint">
+      <div class="drop-hint-inner">
+        <div class="drop-emoji">🖼️</div>
+        <p><strong>Drop a photo here</strong></p>
+        <p class="muted">or use <em>Choose photo</em> or <em>Sample picture</em> above</p>
+      </div>
+    </div>
+
+    <div id="dropOverlay" class="drop-overlay"><span>Drop the photo! 🎉</span></div>
+  </main>
+
+  <div id="winOverlay" class="win-overlay" hidden>
+    <canvas id="confetti"></canvas>
+    <div class="win-card">
+      <div class="win-emoji">🏆</div>
+      <h2>You did it!</h2>
+      <p id="winText">Puzzle finished!</p>
+      <div class="win-actions">
+        <button type="button" class="btn btn-go" id="againBtn">🔁 Play again</button>
+        <button type="button" class="btn btn-ghost" id="newPhotoBtn">📷 New photo</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">Drag a piece to move it &nbsp;•&nbsp; Tap a piece to turn it &nbsp;•&nbsp; Pieces click into place when they fit</p>
+
+  <script src="jigsaw.js"></script>
+  <script src="pieces.js"></script>
+  <script src="effects.js"></script>
+  <script src="interaction.js"></script>
+  <script src="sample.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
