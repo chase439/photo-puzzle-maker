@@ -50,3 +50,10 @@ Everything (including your photo) stays on your computer.
 | `effects.js` | Sounds, sparkles and confetti |
 | `sample.js` | The built-in sample picture |
 | `main.js` | Wires everything together |
+
+## Publishing
+
+The site is served by GitHub Pages from `main`. Browsers cache files for up to
+10 minutes, so when you change any `.js` or `.css` file, bump the `?v=` number on
+every `<script>` / stylesheet link in `index.html`. That way a fresh page never
+runs with old code.
