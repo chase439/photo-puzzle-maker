@@ -23,6 +23,7 @@ const againBtn = el('againBtn');
 const newPhotoBtn = el('newPhotoBtn');
 const viewBtn = el('viewBtn');
 const winCloseBtn = el('winCloseBtn');
+const showcase = el('showcase');
 
 // Gap kept between the board, the tray of loose pieces and the stage edges.
 const BOARD_MARGIN = 14;
@@ -30,6 +31,8 @@ const BOARD_MARGIN = 14;
 const TRAY_AREA_RATIO = 1.15;
 // Ignore backdrop taps right after the win card appears so a stray tap can't dismiss it.
 const WIN_BACKDROP_GRACE_MS = 700;
+// Gap around the finished photo when it is blown up to fill the play area.
+const SHOWCASE_MARGIN = 12;
 
 const state = {
   image: null,
@@ -37,6 +40,8 @@ const state = {
   controller: null,
   stageW: 0,
   stageH: 0,
+  board: null,
+  showcased: false,
   stopConfetti: null,
   winShownAt: 0,
 };
@@ -60,6 +65,89 @@ function fitStage() {
     stageWrap.clientHeight / state.stageH,
   );
   stage.style.transform = `scale(${k})`;
+  if (state.showcased) drawShowcase();
+}
+
+/** Biggest rect with the board's shape that fits the play area, in stageWrap pixels. */
+function showcaseRect() {
+  const W = stageWrap.clientWidth;
+  const H = stageWrap.clientHeight;
+  const s = Math.min(
+    (W - 2 * SHOWCASE_MARGIN) / state.board.w,
+    (H - 2 * SHOWCASE_MARGIN) / state.board.h,
+  );
+  const w = Math.round(state.board.w * s);
+  const h = Math.round(state.board.h * s);
+  return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h };
+}
+
+/**
+ * Paint the finished puzzle at full resolution for its maximized size: the photo,
+ * plus crisp piece outlines so it still looks like the jigsaw that was built.
+ */
+function drawShowcase() {
+  const rect = showcaseRect();
+  const dpr = window.devicePixelRatio || 1;
+  showcase.width = Math.max(1, Math.round(rect.w * dpr));
+  showcase.height = Math.max(1, Math.round(rect.h * dpr));
+  showcase.style.left = `${rect.x}px`;
+  showcase.style.top = `${rect.y}px`;
+  showcase.style.width = `${rect.w}px`;
+  showcase.style.height = `${rect.h}px`;
+
+  const ctx = showcase.getContext('2d');
+  ctx.drawImage(coverCrop(state.image, showcase.width, showcase.height), 0, 0);
+
+  // Outlines live in board units; keep them about the same on-screen thickness as on the board.
+  const k = showcase.width / state.board.w;
+  const s = rect.w / state.board.w;
+  ctx.save();
+  ctx.scale(k, k);
+  ctx.lineJoin = 'round';
+  for (const p of state.controller.pieces) {
+    ctx.save();
+    ctx.translate(p.gx - p.pad, p.gy - p.pad);
+    ctx.lineWidth = 2 / s;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.stroke(p.path);
+    ctx.lineWidth = 1 / s;
+    ctx.strokeStyle = 'rgba(30, 41, 59, 0.3)';
+    ctx.stroke(p.path);
+    ctx.restore();
+  }
+  ctx.restore();
+  return rect;
+}
+
+/** Grow the finished puzzle from the board to fill the play area. */
+function showFinished() {
+  if (!state.board || !state.controller) return;
+  const wrapBox = stageWrap.getBoundingClientRect();
+  const boardBox = boardEl.getBoundingClientRect();
+  state.showcased = true;
+  const rect = drawShowcase();
+
+  // Start exactly over the board, then animate to the maximized spot.
+  const from = {
+    x: boardBox.left - wrapBox.left,
+    y: boardBox.top - wrapBox.top,
+    s: boardBox.width / rect.w,
+  };
+  showcase.classList.remove('is-growing');
+  showcase.style.transform = `translate(${from.x - rect.x}px, ${from.y - rect.y}px) scale(${from.s})`;
+  showcase.hidden = false;
+  void showcase.offsetWidth;
+  showcase.classList.add('is-growing');
+  showcase.style.transform = 'none';
+  stage.classList.add('is-showcased');
+}
+
+function hideFinished() {
+  state.showcased = false;
+  showcase.hidden = true;
+  showcase.classList.remove('is-growing');
+  showcase.style.transform = '';
+  stage.classList.remove('is-showcased');
 }
 
 function updateProgress(done, total) {
@@ -135,6 +223,7 @@ function onWin() {
   peekBtn.setAttribute('aria-pressed', 'false');
   peekBtn.disabled = true;
   shuffleBtn.disabled = true;
+  showFinished();
   winOverlay.hidden = false;
   state.winShownAt = performance.now();
   state.stopConfetti = startConfetti(confettiCanvas);
@@ -150,6 +239,7 @@ function build() {
     state.controller = null;
   }
   layer.innerHTML = '';
+  hideFinished();
   boardEl.classList.remove('peek', 'is-complete');
   peekBtn.setAttribute('aria-pressed', 'false');
 
@@ -200,6 +290,7 @@ function build() {
   layer.appendChild(fragment);
 
   const board = { x: bx, y: by, w: bw, h: bh };
+  state.board = board;
   scatterPieces(pieces, { w: stageW, h: stageH }, board);
 
   state.controller = createController({

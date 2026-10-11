@@ -197,6 +197,30 @@ body {
   inset: 0;
 }
 
+#stage.is-showcased {
+  opacity: 0;
+  transition: opacity 0.3s ease 0.6s;
+}
+
+/* The finished photo, blown up to fill the play area. */
+.showcase {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(30, 41, 59, 0.35);
+  transform-origin: 0 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.showcase[hidden] { display: none; }
+.showcase.is-growing { transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .showcase.is-growing, #stage.is-showcased { transition: none; }
+}
+
 .piece {
   position: absolute;
   top: 0;

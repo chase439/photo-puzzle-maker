@@ -18,8 +18,9 @@ Everything (including your photo) stays on your computer.
 5. When a piece is in the right place *and* the right way up, it clicks into
    place with a sparkle and stays put. If it is in the right place but turned
    the wrong way, it flashes to say "turn me".
-6. Place them all for confetti and a cheer. Close the 🏆 card (✕, **See my puzzle**,
-   tap outside it, or `Esc`) to admire the finished picture.
+6. Place them all for confetti and a cheer. The finished picture grows to fill the
+   screen; close the 🏆 card (✕, **See my puzzle**, tap outside it, or `Esc`) to
+   admire it.
 
 ### Buttons
 
