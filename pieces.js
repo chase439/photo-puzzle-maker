@@ -122,15 +122,23 @@ function overlapsBoard(x, y, w, h, board, margin) {
 }
 
 /**
- * Scatter pieces around (never on top of) the board, with random quarter turns.
+ * Scatter pieces with random quarter turns. Normally they go around (never on top
+ * of) the board; with `onBoard` they may land anywhere, just not near their own
+ * home spot, so nothing looks solved by accident.
  * Each piece takes the best of several random spots - the one farthest from the
  * pieces already dropped - so the pile spreads evenly over the free space.
  * Pieces may still overlap each other - that is what a real pile of pieces looks like.
  */
-function scatterPieces(pieces, stage, board, { rotate = true } = {}) {
+function scatterPieces(pieces, stage, board, { rotate = true, onBoard = false } = {}) {
   const angles = [0, 90, 180, 270];
   const centers = [];
   const CANDIDATES = 14;
+
+  const allowed = (x, y, piece) => {
+    if (!onBoard) return !overlapsBoard(x, y, piece.w, piece.h, board, 6);
+    const keepAway = Math.max(piece.cellW, piece.cellH) * 1.5;
+    return Math.hypot(x - piece.homeX, y - piece.homeY) > keepAway;
+  };
 
   const spread = (x, y, piece) => {
     const cx = x + piece.w / 2;
@@ -159,7 +167,7 @@ function scatterPieces(pieces, stage, board, { rotate = true } = {}) {
     for (let tries = 0; tries < 160 && found < CANDIDATES; tries++) {
       const cx = Math.random() * maxX;
       const cy = Math.random() * maxY;
-      if (overlapsBoard(cx, cy, piece.w, piece.h, board, 6)) continue;
+      if (!allowed(cx, cy, piece)) continue;
       found += 1;
       const score = spread(cx, cy, piece);
       if (score > bestScore) {

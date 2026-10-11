@@ -24,19 +24,44 @@ const newPhotoBtn = el('newPhotoBtn');
 const viewBtn = el('viewBtn');
 const winCloseBtn = el('winCloseBtn');
 const showcase = el('showcase');
+const sizeBtn = el('sizeBtn');
 
 // Gap kept between the board, the tray of loose pieces and the stage edges.
 const BOARD_MARGIN = 14;
-// Area of the loose-piece tray, as a multiple of the board's area.
-const TRAY_AREA_RATIO = 1.15;
+// Board size presets. `tray` is the loose-piece tray's area as a multiple of the
+// board's area; `null` means the board fills the play area and pieces lie on top of it.
+const BOARD_SIZES = [
+  { id: 'small', label: 'Small', short: 'S', tray: 2.0 },
+  { id: 'medium', label: 'Medium', short: 'M', tray: 1.15 },
+  { id: 'full', label: 'Full', short: 'Full', tray: null },
+];
+const BOARD_SIZE_KEY = 'ppm.boardSize';
 // Ignore backdrop taps right after the win card appears so a stray tap can't dismiss it.
 const WIN_BACKDROP_GRACE_MS = 700;
 // Gap around the finished photo when it is blown up to fill the play area.
 const SHOWCASE_MARGIN = 12;
 
+function loadBoardSize() {
+  try {
+    const saved = window.localStorage.getItem(BOARD_SIZE_KEY);
+    return BOARD_SIZES.find((s) => s.id === saved) || BOARD_SIZES[1];
+  } catch {
+    return BOARD_SIZES[1]; // storage can be blocked (e.g. private mode / file://)
+  }
+}
+
+function saveBoardSize(size) {
+  try {
+    window.localStorage.setItem(BOARD_SIZE_KEY, size.id);
+  } catch {
+    /* remembering the choice is best-effort */
+  }
+}
+
 const state = {
   image: null,
   target: 50,
+  boardSize: loadBoardSize(),
   controller: null,
   stageW: 0,
   stageH: 0,
@@ -152,18 +177,27 @@ function hideFinished() {
 
 function updateProgress(done, total) {
   if (done >= total) {
-    setStatus(`🎉 All ${total} pieces placed!`);
+    setStatus(`🎉 All ${total} placed!`);
   } else {
     setStatus(`🧩 ${done} of ${total} placed`);
   }
 }
 
 /**
- * Make the board (photo frame) as big as possible while keeping one roomy tray
- * for the loose pieces: beside the board on wide screens, below it on tall ones.
+ * Place the board (photo frame). With a tray ratio it is made as big as possible
+ * while keeping one roomy tray for the loose pieces: beside the board on wide
+ * screens, below it on tall ones. Without one it simply fills the play area.
  */
-function layoutBoard(stageW, stageH, aspect, grid) {
+function layoutBoard(stageW, stageH, aspect, grid, trayRatio) {
   const m = BOARD_MARGIN;
+
+  if (trayRatio == null) {
+    const s = Math.min((stageW - 2 * m) / aspect, stageH - 2 * m);
+    const bw = Math.round(s * aspect);
+    const bh = Math.round(s);
+    return { x: Math.round((stageW - bw) / 2), y: Math.round((stageH - bh) / 2), w: bw, h: bh };
+  }
+
   let best = null;
 
   for (const beside of [true, false]) {
@@ -187,7 +221,7 @@ function layoutBoard(stageW, stageH, aspect, grid) {
       const pad = Math.ceil(MAX_TAB * Math.min(cellW, cellH)) + 12;
       const pieceBox = Math.max(cellW, cellH) + pad * 2;
       const tray = mainLen - main - 3 * m;
-      if (tray >= pieceBox && tray * crossLen >= TRAY_AREA_RATIO * bw * bh) break;
+      if (tray >= pieceBox && tray * crossLen >= trayRatio * bw * bh) break;
       main *= 0.98;
       cross *= 0.98;
     }
@@ -255,7 +289,7 @@ function build() {
   const aspect = size.w / size.h;
   const grid = chooseGrid(state.target, aspect);
 
-  const { x: bx, y: by, w: bw, h: bh } = layoutBoard(stageW, stageH, aspect, grid);
+  const { x: bx, y: by, w: bw, h: bh } = layoutBoard(stageW, stageH, aspect, grid, state.boardSize.tray);
 
   boardEl.style.left = `${bx}px`;
   boardEl.style.top = `${by}px`;
@@ -291,13 +325,15 @@ function build() {
 
   const board = { x: bx, y: by, w: bw, h: bh };
   state.board = board;
-  scatterPieces(pieces, { w: stageW, h: stageH }, board);
+  const scatter = { onBoard: state.boardSize.tray == null };
+  scatterPieces(pieces, { w: stageW, h: stageH }, board, scatter);
 
   state.controller = createController({
     stage,
     pieces,
     board,
     stageSize: { w: stageW, h: stageH },
+    scatter,
     onProgress: updateProgress,
     onWin,
   });
@@ -374,6 +410,24 @@ document.querySelectorAll('.chip').forEach((chip) => {
     if (state.image) buildSoon();
   });
 });
+
+function renderSizeButton() {
+  const size = state.boardSize;
+  sizeBtn.querySelector('.label-full').textContent = size.label;
+  sizeBtn.querySelector('.label-short').textContent = size.short;
+  sizeBtn.setAttribute('aria-label', `Board size: ${size.label}. Tap to change.`);
+  sizeBtn.title = `Board size: ${size.label} (tap to change)`;
+}
+
+sizeBtn.addEventListener('click', () => {
+  const i = BOARD_SIZES.indexOf(state.boardSize);
+  state.boardSize = BOARD_SIZES[(i + 1) % BOARD_SIZES.length];
+  saveBoardSize(state.boardSize);
+  renderSizeButton();
+  if (state.image) buildSoon();
+});
+
+renderSizeButton();
 
 againBtn.addEventListener('click', () => {
   closeWin();

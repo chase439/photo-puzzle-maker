@@ -3,7 +3,7 @@
 const TAP_SLOP = 8; // px of movement still counted as a tap
 const TAP_TIME = 600; // ms
 
-function createController({ stage, pieces, board, stageSize, onProgress, onWin }) {
+function createController({ stage, pieces, board, stageSize, scatter = {}, onProgress, onWin }) {
   let topZ = 100;
   let drag = null;
   let hovered = null;
@@ -202,7 +202,7 @@ function createController({ stage, pieces, board, stageSize, onProgress, onWin }
   return {
     pieces,
     shuffle() {
-      scatterPieces(pieces, stageSize, board, { rotate: true });
+      scatterPieces(pieces, stageSize, board, { ...scatter, rotate: true });
       pieces.forEach((p) => {
         if (!p.locked) {
           p.el.classList.add('snapping');

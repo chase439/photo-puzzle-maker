@@ -11,7 +11,14 @@ Everything (including your photo) stays on your computer.
 
 1. **Choose photo** to pick a picture, drag a photo onto the window, or paste one.
    No photo handy? Press **Sample picture**.
-2. Pick how many pieces: **25**, **50**, **75** or **100**.
+2. Pick how many pieces: **25**, **50**, **75** or **100**, and a board size with
+   the 🖼️ button (tap to cycle):
+   - **Small** — smaller picture, lots of room for loose pieces (easiest).
+   - **Medium** — bigger picture with a tray of pieces beside or below it.
+   - **Full** — the picture fills the screen and loose pieces lie on top of it,
+     like tipping a real puzzle box onto the picture.
+
+   The size you pick is remembered next time.
 3. The photo is cut into real jigsaw pieces and scattered around the board.
 4. **Drag** a piece to move it. **Tap/click** a piece to turn it a quarter turn
    (right-click or press `R` also turns it).
@@ -26,6 +33,7 @@ Everything (including your photo) stays on your computer.
 
 - **Shuffle** — re-scatter the pieces you haven't placed yet.
 - **Peek** — fade the finished picture onto the board as a hint.
+- **🖼️ Small / Medium / Full** — board size; changing it re-cuts the puzzle.
 - **Play again** — recut the same photo with a brand new set of piece shapes.
 
 ## Notes
@@ -33,8 +41,8 @@ Everything (including your photo) stays on your computer.
 - Piece counts are targets. The app picks the grid that keeps pieces closest to
   square for your photo's shape, so 75 might become 70 and 25 might become 24.
   The real count is always shown in the status pill.
-- The board is made as big as the screen allows, with the loose pieces in a tray
-  beside it on wide screens or below it on tall ones.
+- The board is made as big as the chosen size allows, with the loose pieces in a
+  tray beside it on wide screens or below it on tall ones (Small / Medium).
 - Works with mouse, trackpad and touch screens. On iPad the toolbar stays compact
   and double-tap / pinch zoom is switched off so quick taps never zoom the page.
   Tip: *Share → Add to Home Screen* runs it full screen.

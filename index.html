@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Photo Puzzle Maker</title>
-<link rel="stylesheet" href="styles.css?v=3" />
+<link rel="stylesheet" href="styles.css?v=4" />
 </head>
 <body>
   <header class="topbar">
@@ -21,12 +21,14 @@
       <button type="button" class="btn btn-ghost" id="sampleBtn">🌈 <span class="label-full">Sample picture</span><span class="label-short">Sample</span></button>
 
       <div class="count-group" role="group" aria-label="Number of pieces">
-        <span class="count-label">Pieces:</span>
+        <span class="count-label"><span class="count-word">Pieces:</span><span class="count-icon" aria-hidden="true">🧩</span></span>
         <button type="button" class="chip" data-count="25">25</button>
         <button type="button" class="chip is-active" data-count="50">50</button>
         <button type="button" class="chip" data-count="75">75</button>
         <button type="button" class="chip" data-count="100">100</button>
       </div>
+
+      <button type="button" class="btn btn-ghost" id="sizeBtn">🖼️ <span class="label-full">Medium</span><span class="label-short">M</span></button>
 
       <button type="button" class="btn btn-go" id="startBtn" disabled>▶ <span class="label-full">Make puzzle</span><span class="label-short">Make</span></button>
       <button type="button" class="btn btn-ghost" id="shuffleBtn" disabled>🔀 Shuffle</button>
@@ -71,11 +73,11 @@
     </div>
   </div>
 
-  <script src="jigsaw.js?v=3"></script>
-  <script src="pieces.js?v=3"></script>
-  <script src="effects.js?v=3"></script>
-  <script src="interaction.js?v=3"></script>
-  <script src="sample.js?v=3"></script>
-  <script src="main.js?v=3"></script>
+  <script src="jigsaw.js?v=4"></script>
+  <script src="pieces.js?v=4"></script>
+  <script src="effects.js?v=4"></script>
+  <script src="interaction.js?v=4"></script>
+  <script src="sample.js?v=4"></script>
+  <script src="main.js?v=4"></script>
 </body>
 </html>

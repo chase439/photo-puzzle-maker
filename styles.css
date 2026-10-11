@@ -127,6 +127,7 @@ body {
 }
 
 .count-label { font-weight: 800; font-size: 15px; margin-right: 2px; }
+.count-icon { display: none; }
 
 .chip {
   border: none;
@@ -371,7 +372,7 @@ body {
 }
 
 /* Tablets and laptops: short labels keep the toolbar on a single row. */
-@media (max-width: 1499px) {
+@media (max-width: 1599px) {
   .logo-text { display: none; }
   .label-full { display: none; }
   .label-short { display: inline; }
@@ -379,6 +380,9 @@ body {
 
 /* iPad landscape and narrower. */
 @media (max-width: 1100px) {
+  .logo { display: none; }
+  .count-word { display: none; }
+  .count-icon { display: inline; }
   .topbar { gap: 6px; }
   .btn { padding: 9px 11px; }
   .count-group { padding-left: 10px; }
