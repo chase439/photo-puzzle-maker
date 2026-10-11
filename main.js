@@ -28,12 +28,13 @@ const sizeBtn = el('sizeBtn');
 
 // Gap kept between the board, the tray of loose pieces and the stage edges.
 const BOARD_MARGIN = 14;
-// Board size presets. `tray` is the loose-piece tray's area as a multiple of the
-// board's area; `null` means the board fills the play area and pieces lie on top of it.
+// Board size presets. `area` is the board's target share of the play area (it is
+// capped by what fits). `onBoard` lets loose pieces spill onto the board's edges
+// once the space around it is used up; `centered` puts the board in the middle.
 const BOARD_SIZES = [
-  { id: 'small', label: 'Small', short: 'S', tray: 2.0 },
-  { id: 'medium', label: 'Medium', short: 'M', tray: 1.15 },
-  { id: 'full', label: 'Full', short: 'Full', tray: null },
+  { id: 'small', label: 'Small', short: 'S', area: 0.34, onBoard: false, centered: false },
+  { id: 'medium', label: 'Medium', short: 'M', area: 0.6, onBoard: true, centered: false },
+  { id: 'full', label: 'Full', short: 'Full', area: 1, onBoard: true, centered: true },
 ];
 const BOARD_SIZE_KEY = 'ppm.boardSize';
 // Ignore backdrop taps right after the win card appears so a stray tap can't dismiss it.
@@ -184,61 +185,24 @@ function updateProgress(done, total) {
 }
 
 /**
- * Place the board (photo frame). With a tray ratio it is made as big as possible
- * while keeping one roomy tray for the loose pieces: beside the board on wide
- * screens, below it on tall ones. Without one it simply fills the play area.
+ * Place the board (photo frame) so it covers about `size.area` of the play area,
+ * capped by what fits. Unless centered, it hugs one edge so the loose pieces get
+ * one big open space: beside the board on wide screens, below it on tall ones.
  */
-function layoutBoard(stageW, stageH, aspect, grid, trayRatio) {
+function layoutBoard(stageW, stageH, aspect, size) {
   const m = BOARD_MARGIN;
+  let bh = Math.sqrt((size.area * stageW * stageH) / aspect);
+  let bw = bh * aspect;
+  const fit = Math.min(1, (stageW - 2 * m) / bw, (stageH - 2 * m) / bh);
+  bw = Math.round(bw * fit);
+  bh = Math.round(bh * fit);
 
-  if (trayRatio == null) {
-    const s = Math.min((stageW - 2 * m) / aspect, stageH - 2 * m);
-    const bw = Math.round(s * aspect);
-    const bh = Math.round(s);
-    return { x: Math.round((stageW - bw) / 2), y: Math.round((stageH - bh) / 2), w: bw, h: bh };
-  }
+  const midX = Math.round((stageW - bw) / 2);
+  const midY = Math.round((stageH - bh) / 2);
+  if (size.centered) return { x: midX, y: midY, w: bw, h: bh };
 
-  let best = null;
-
-  for (const beside of [true, false]) {
-    // "main" is the axis shared by board and tray; "cross" is the other one.
-    const mainLen = beside ? stageW : stageH;
-    const crossLen = beside ? stageH : stageW;
-    const ratio = beside ? aspect : 1 / aspect; // board main / board cross
-
-    let cross = crossLen - 2 * m;
-    let main = cross * ratio;
-    if (main > mainLen - 2 * m) {
-      main = mainLen - 2 * m;
-      cross = main / ratio;
-    }
-
-    for (let i = 0; i < 200 && main > 40 && cross > 40; i++) {
-      const bw = beside ? main : cross;
-      const bh = beside ? cross : main;
-      const cellW = bw / grid.cols;
-      const cellH = bh / grid.rows;
-      const pad = Math.ceil(MAX_TAB * Math.min(cellW, cellH)) + 12;
-      const pieceBox = Math.max(cellW, cellH) + pad * 2;
-      const tray = mainLen - main - 3 * m;
-      if (tray >= pieceBox && tray * crossLen >= trayRatio * bw * bh) break;
-      main *= 0.98;
-      cross *= 0.98;
-    }
-
-    const bw = Math.round(beside ? main : cross);
-    const bh = Math.round(beside ? cross : main);
-    if (!best || bw * bh > best.w * best.h) {
-      best = {
-        x: beside ? m : Math.round((stageW - bw) / 2),
-        y: beside ? Math.round((stageH - bh) / 2) : m,
-        w: bw,
-        h: bh,
-      };
-    }
-  }
-
-  return best;
+  const beside = stageW - bw >= stageH - bh;
+  return beside ? { x: m, y: midY, w: bw, h: bh } : { x: midX, y: m, w: bw, h: bh };
 }
 
 function closeWin() {
@@ -289,7 +253,7 @@ function build() {
   const aspect = size.w / size.h;
   const grid = chooseGrid(state.target, aspect);
 
-  const { x: bx, y: by, w: bw, h: bh } = layoutBoard(stageW, stageH, aspect, grid, state.boardSize.tray);
+  const { x: bx, y: by, w: bw, h: bh } = layoutBoard(stageW, stageH, aspect, state.boardSize);
 
   boardEl.style.left = `${bx}px`;
   boardEl.style.top = `${by}px`;
@@ -325,7 +289,7 @@ function build() {
 
   const board = { x: bx, y: by, w: bw, h: bh };
   state.board = board;
-  const scatter = { onBoard: state.boardSize.tray == null };
+  const scatter = { onBoard: state.boardSize.onBoard };
   scatterPieces(pieces, { w: stageW, h: stageH }, board, scatter);
 
   state.controller = createController({

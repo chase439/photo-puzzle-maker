@@ -13,10 +13,12 @@ Everything (including your photo) stays on your computer.
    No photo handy? Press **Sample picture**.
 2. Pick how many pieces: **25**, **50**, **75** or **100**, and a board size with
    the 🖼️ button (tap to cycle):
-   - **Small** — smaller picture, lots of room for loose pieces (easiest).
-   - **Medium** — bigger picture with a tray of pieces beside or below it.
-   - **Full** — the picture fills the screen and loose pieces lie on top of it,
-     like tipping a real puzzle box onto the picture.
+   - **Small** — picture covers about a third of the play area, with lots of room
+     for loose pieces (easiest).
+   - **Medium** — picture covers about 60%; loose pieces fill the space beside or
+     below it and spill onto its edges.
+   - **Full** — the picture fills the screen; loose pieces fill any spare space
+     and sit around the edges of the picture, leaving the middle clear.
 
    The size you pick is remembered next time.
 3. The photo is cut into real jigsaw pieces and scattered around the board.
@@ -41,8 +43,8 @@ Everything (including your photo) stays on your computer.
 - Piece counts are targets. The app picks the grid that keeps pieces closest to
   square for your photo's shape, so 75 might become 70 and 25 might become 24.
   The real count is always shown in the status pill.
-- The board is made as big as the chosen size allows, with the loose pieces in a
-  tray beside it on wide screens or below it on tall ones (Small / Medium).
+- The board hugs one side of the play area (Small / Medium) so the loose pieces get
+  one big open space: beside it on wide screens, below it on tall ones.
 - Works with mouse, trackpad and touch screens. On iPad the toolbar stays compact
   and double-tap / pinch zoom is switched off so quick taps never zoom the page.
   Tip: *Share → Add to Home Screen* runs it full screen.

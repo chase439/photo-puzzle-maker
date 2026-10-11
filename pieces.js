@@ -123,8 +123,9 @@ function overlapsBoard(x, y, w, h, board, margin) {
 
 /**
  * Scatter pieces with random quarter turns. Normally they go around (never on top
- * of) the board; with `onBoard` they may land anywhere, just not near their own
- * home spot, so nothing looks solved by accident.
+ * of) the board. With `onBoard` they fill the open space first, then spill onto
+ * the board's outer edge, going deeper only when they must, and never land near
+ * their own home spot, so nothing looks solved by accident.
  * Each piece takes the best of several random spots - the one farthest from the
  * pieces already dropped - so the pile spreads evenly over the free space.
  * Pieces may still overlap each other - that is what a real pile of pieces looks like.
@@ -132,7 +133,10 @@ function overlapsBoard(x, y, w, h, board, margin) {
 function scatterPieces(pieces, stage, board, { rotate = true, onBoard = false } = {}) {
   const angles = [0, 90, 180, 270];
   const centers = [];
-  const CANDIDATES = 14;
+  const CANDIDATES = onBoard ? 40 : 14;
+  // Score lost per pixel a piece's center sits inside the board (onBoard only).
+  const DEPTH_COST = 1.6;
+  const diag = Math.hypot(stage.w, stage.h);
 
   const allowed = (x, y, piece) => {
     if (!onBoard) return !overlapsBoard(x, y, piece.w, piece.h, board, 6);
@@ -140,7 +144,10 @@ function scatterPieces(pieces, stage, board, { rotate = true, onBoard = false } 
     return Math.hypot(x - piece.homeX, y - piece.homeY) > keepAway;
   };
 
-  const spread = (x, y, piece) => {
+  const depthInBoard = (cx, cy) =>
+    Math.max(0, Math.min(cx - board.x, board.x + board.w - cx, cy - board.y, board.y + board.h - cy));
+
+  const score = (x, y, piece) => {
     const cx = x + piece.w / 2;
     const cy = y + piece.h / 2;
     let nearest = Infinity;
@@ -148,7 +155,8 @@ function scatterPieces(pieces, stage, board, { rotate = true, onBoard = false } 
       const d = (c.x - cx) ** 2 + (c.y - cy) ** 2;
       if (d < nearest) nearest = d;
     }
-    return nearest;
+    const room = Math.min(Math.sqrt(nearest), diag);
+    return onBoard ? room - DEPTH_COST * depthInBoard(cx, cy) : room;
   };
 
   for (const piece of pieces) {
@@ -156,22 +164,25 @@ function scatterPieces(pieces, stage, board, { rotate = true, onBoard = false } 
 
     piece.rot = rotate ? angles[Math.floor(Math.random() * 4)] : 0;
 
-    const maxX = Math.max(0, stage.w - piece.w);
-    const maxY = Math.max(0, stage.h - piece.h);
+    // On-board layouts may tuck pieces slightly past the stage edge (same limit as dragging).
+    const minX = onBoard ? -piece.w * 0.15 : 0;
+    const minY = onBoard ? -piece.h * 0.15 : 0;
+    const maxX = Math.max(minX, onBoard ? stage.w - piece.w * 0.85 : stage.w - piece.w);
+    const maxY = Math.max(minY, onBoard ? stage.h - piece.h * 0.85 : stage.h - piece.h);
     let x = 0;
     let y = 0;
     let placed = false;
-    let bestScore = -1;
+    let bestScore = -Infinity;
     let found = 0;
 
-    for (let tries = 0; tries < 160 && found < CANDIDATES; tries++) {
-      const cx = Math.random() * maxX;
-      const cy = Math.random() * maxY;
+    for (let tries = 0; tries < 300 && found < CANDIDATES; tries++) {
+      const cx = minX + Math.random() * (maxX - minX);
+      const cy = minY + Math.random() * (maxY - minY);
       if (!allowed(cx, cy, piece)) continue;
       found += 1;
-      const score = spread(cx, cy, piece);
-      if (score > bestScore) {
-        bestScore = score;
+      const s = score(cx, cy, piece);
+      if (s > bestScore) {
+        bestScore = s;
         x = cx;
         y = cy;
         placed = true;
