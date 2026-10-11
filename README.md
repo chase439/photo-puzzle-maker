@@ -18,7 +18,8 @@ Everything (including your photo) stays on your computer.
 5. When a piece is in the right place *and* the right way up, it clicks into
    place with a sparkle and stays put. If it is in the right place but turned
    the wrong way, it flashes to say "turn me".
-6. Place them all for confetti and a cheer.
+6. Place them all for confetti and a cheer. Close the 🏆 card (✕, **See my puzzle**,
+   tap outside it, or `Esc`) to admire the finished picture.
 
 ### Buttons
 
@@ -31,7 +32,11 @@ Everything (including your photo) stays on your computer.
 - Piece counts are targets. The app picks the grid that keeps pieces closest to
   square for your photo's shape, so 75 might become 70 and 25 might become 24.
   The real count is always shown in the status pill.
-- Works with mouse, trackpad and touch screens.
+- The board is made as big as the screen allows, with the loose pieces in a tray
+  beside it on wide screens or below it on tall ones.
+- Works with mouse, trackpad and touch screens. On iPad the toolbar stays compact
+  and double-tap / pinch zoom is switched off so quick taps never zoom the page.
+  Tip: *Share → Add to Home Screen* runs it full screen.
 
 ## Files
 

@@ -21,6 +21,15 @@ const winText = el('winText');
 const confettiCanvas = el('confetti');
 const againBtn = el('againBtn');
 const newPhotoBtn = el('newPhotoBtn');
+const viewBtn = el('viewBtn');
+const winCloseBtn = el('winCloseBtn');
+
+// Gap kept between the board, the tray of loose pieces and the stage edges.
+const BOARD_MARGIN = 14;
+// Area of the loose-piece tray, as a multiple of the board's area.
+const TRAY_AREA_RATIO = 1.15;
+// Ignore backdrop taps right after the win card appears so a stray tap can't dismiss it.
+const WIN_BACKDROP_GRACE_MS = 700;
 
 const state = {
   image: null,
@@ -29,6 +38,7 @@ const state = {
   stageW: 0,
   stageH: 0,
   stopConfetti: null,
+  winShownAt: 0,
 };
 
 function setStatus(text) {
@@ -56,8 +66,57 @@ function updateProgress(done, total) {
   if (done >= total) {
     setStatus(`🎉 All ${total} pieces placed!`);
   } else {
-    setStatus(`🧩 ${done} of ${total} pieces placed`);
+    setStatus(`🧩 ${done} of ${total} placed`);
   }
+}
+
+/**
+ * Make the board (photo frame) as big as possible while keeping one roomy tray
+ * for the loose pieces: beside the board on wide screens, below it on tall ones.
+ */
+function layoutBoard(stageW, stageH, aspect, grid) {
+  const m = BOARD_MARGIN;
+  let best = null;
+
+  for (const beside of [true, false]) {
+    // "main" is the axis shared by board and tray; "cross" is the other one.
+    const mainLen = beside ? stageW : stageH;
+    const crossLen = beside ? stageH : stageW;
+    const ratio = beside ? aspect : 1 / aspect; // board main / board cross
+
+    let cross = crossLen - 2 * m;
+    let main = cross * ratio;
+    if (main > mainLen - 2 * m) {
+      main = mainLen - 2 * m;
+      cross = main / ratio;
+    }
+
+    for (let i = 0; i < 200 && main > 40 && cross > 40; i++) {
+      const bw = beside ? main : cross;
+      const bh = beside ? cross : main;
+      const cellW = bw / grid.cols;
+      const cellH = bh / grid.rows;
+      const pad = Math.ceil(MAX_TAB * Math.min(cellW, cellH)) + 12;
+      const pieceBox = Math.max(cellW, cellH) + pad * 2;
+      const tray = mainLen - main - 3 * m;
+      if (tray >= pieceBox && tray * crossLen >= TRAY_AREA_RATIO * bw * bh) break;
+      main *= 0.98;
+      cross *= 0.98;
+    }
+
+    const bw = Math.round(beside ? main : cross);
+    const bh = Math.round(beside ? cross : main);
+    if (!best || bw * bh > best.w * best.h) {
+      best = {
+        x: beside ? m : Math.round((stageW - bw) / 2),
+        y: beside ? Math.round((stageH - bh) / 2) : m,
+        w: bw,
+        h: bh,
+      };
+    }
+  }
+
+  return best;
 }
 
 function closeWin() {
@@ -71,7 +130,13 @@ function closeWin() {
 function onWin() {
   const total = state.controller ? state.controller.pieces.length : 0;
   winText.textContent = `You put together a ${total} piece puzzle!`;
+  boardEl.classList.remove('peek');
+  boardEl.classList.add('is-complete');
+  peekBtn.setAttribute('aria-pressed', 'false');
+  peekBtn.disabled = true;
+  shuffleBtn.disabled = true;
   winOverlay.hidden = false;
+  state.winShownAt = performance.now();
   state.stopConfetti = startConfetti(confettiCanvas);
   playFanfare();
 }
@@ -85,7 +150,7 @@ function build() {
     state.controller = null;
   }
   layer.innerHTML = '';
-  boardEl.classList.remove('peek');
+  boardEl.classList.remove('peek', 'is-complete');
   peekBtn.setAttribute('aria-pressed', 'false');
 
   const stageW = Math.max(360, stageWrap.clientWidth);
@@ -98,18 +163,9 @@ function build() {
 
   const size = imageSize(state.image);
   const aspect = size.w / size.h;
+  const grid = chooseGrid(state.target, aspect);
 
-  let bw = stageW * 0.56;
-  let bh = bw / aspect;
-  const maxH = stageH * 0.64;
-  if (bh > maxH) {
-    bh = maxH;
-    bw = bh * aspect;
-  }
-  bw = Math.round(bw);
-  bh = Math.round(bh);
-  const bx = Math.round((stageW - bw) / 2);
-  const by = Math.round((stageH - bh) / 2);
+  const { x: bx, y: by, w: bw, h: bh } = layoutBoard(stageW, stageH, aspect, grid);
 
   boardEl.style.left = `${bx}px`;
   boardEl.style.top = `${by}px`;
@@ -117,7 +173,6 @@ function build() {
   boardEl.style.height = `${bh}px`;
   boardEl.classList.add('is-ready');
 
-  const grid = chooseGrid(state.target, aspect);
   // Crisper pieces on high-DPI screens, but keep memory sane at high piece counts.
   const dpr = window.devicePixelRatio || 1;
   const scale = Math.min(grid.count > 60 ? 1.5 : 2, dpr);
@@ -238,6 +293,51 @@ newPhotoBtn.addEventListener('click', () => {
   closeWin();
   fileInput.click();
 });
+
+viewBtn.addEventListener('click', closeWin);
+winCloseBtn.addEventListener('click', closeWin);
+
+winOverlay.addEventListener('click', (e) => {
+  if (e.target !== winOverlay) return;
+  if (performance.now() - state.winShownAt < WIN_BACKDROP_GRACE_MS) return;
+  closeWin();
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !winOverlay.hidden) closeWin();
+});
+
+/* ---------- touch screens: no accidental page zoom ---------- */
+
+// iOS Safari ignores user-scalable=no, so block double-tap and pinch zoom directly.
+// Buttons rely on CSS touch-action instead so quick repeat taps still click.
+let lastTouchEnd = 0;
+document.addEventListener(
+  'touchend',
+  (e) => {
+    const now = performance.now();
+    const quick = now - lastTouchEnd < 400;
+    lastTouchEnd = now;
+    const t = e.target;
+    const control = t && t.closest && t.closest('button, label, input, a, select, textarea');
+    if (quick && e.cancelable && !control) e.preventDefault();
+  },
+  { passive: false },
+);
+
+document.addEventListener(
+  'touchmove',
+  (e) => {
+    if (e.touches.length > 1 && e.cancelable) e.preventDefault();
+  },
+  { passive: false },
+);
+
+['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
+  document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+});
+
+document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
 
 /* ---------- drag & drop / paste ---------- */
 

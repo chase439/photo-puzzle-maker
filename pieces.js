@@ -123,10 +123,26 @@ function overlapsBoard(x, y, w, h, board, margin) {
 
 /**
  * Scatter pieces around (never on top of) the board, with random quarter turns.
- * Pieces may overlap each other - that is what a real pile of pieces looks like.
+ * Each piece takes the best of several random spots - the one farthest from the
+ * pieces already dropped - so the pile spreads evenly over the free space.
+ * Pieces may still overlap each other - that is what a real pile of pieces looks like.
  */
 function scatterPieces(pieces, stage, board, { rotate = true } = {}) {
   const angles = [0, 90, 180, 270];
+  const centers = [];
+  const CANDIDATES = 14;
+
+  const spread = (x, y, piece) => {
+    const cx = x + piece.w / 2;
+    const cy = y + piece.h / 2;
+    let nearest = Infinity;
+    for (const c of centers) {
+      const d = (c.x - cx) ** 2 + (c.y - cy) ** 2;
+      if (d < nearest) nearest = d;
+    }
+    return nearest;
+  };
+
   for (const piece of pieces) {
     if (piece.locked) continue;
 
@@ -137,13 +153,20 @@ function scatterPieces(pieces, stage, board, { rotate = true } = {}) {
     let x = 0;
     let y = 0;
     let placed = false;
+    let bestScore = -1;
+    let found = 0;
 
-    for (let tries = 0; tries < 120; tries++) {
-      x = Math.random() * maxX;
-      y = Math.random() * maxY;
-      if (!overlapsBoard(x, y, piece.w, piece.h, board, 6)) {
+    for (let tries = 0; tries < 160 && found < CANDIDATES; tries++) {
+      const cx = Math.random() * maxX;
+      const cy = Math.random() * maxY;
+      if (overlapsBoard(cx, cy, piece.w, piece.h, board, 6)) continue;
+      found += 1;
+      const score = spread(cx, cy, piece);
+      if (score > bestScore) {
+        bestScore = score;
+        x = cx;
+        y = cy;
         placed = true;
-        break;
       }
     }
 
@@ -173,5 +196,6 @@ function scatterPieces(pieces, stage, board, { rotate = true } = {}) {
 
     piece.x = Math.min(Math.max(x, -piece.w * 0.15), stage.w - piece.w * 0.85);
     piece.y = Math.min(Math.max(y, -piece.h * 0.15), stage.h - piece.h * 0.85);
+    centers.push({ x: piece.x + piece.w / 2, y: piece.y + piece.h / 2 });
   }
 }

@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Photo Puzzle Maker</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1 class="logo">🧩 Photo Puzzle Maker</h1>
+    <h1 class="logo" title="Photo Puzzle Maker">🧩<span class="logo-text"> Photo Puzzle Maker</span></h1>
 
     <div class="controls">
       <label class="btn btn-photo">
-        📷 Choose photo
+        📷 <span class="label-full">Choose photo</span><span class="label-short">Photo</span>
         <input type="file" id="fileInput" accept="image/*" hidden />
       </label>
-      <button type="button" class="btn btn-ghost" id="sampleBtn">🌈 Sample picture</button>
+      <button type="button" class="btn btn-ghost" id="sampleBtn">🌈 <span class="label-full">Sample picture</span><span class="label-short">Sample</span></button>
 
       <div class="count-group" role="group" aria-label="Number of pieces">
         <span class="count-label">Pieces:</span>
@@ -25,7 +28,7 @@
         <button type="button" class="chip" data-count="100">100</button>
       </div>
 
-      <button type="button" class="btn btn-go" id="startBtn" disabled>▶ Make puzzle</button>
+      <button type="button" class="btn btn-go" id="startBtn" disabled>▶ <span class="label-full">Make puzzle</span><span class="label-short">Make</span></button>
       <button type="button" class="btn btn-ghost" id="shuffleBtn" disabled>🔀 Shuffle</button>
       <button type="button" class="btn btn-ghost" id="peekBtn" disabled aria-pressed="false">👀 Peek</button>
     </div>
@@ -43,7 +46,8 @@
       <div class="drop-hint-inner">
         <div class="drop-emoji">🖼️</div>
         <p><strong>Drop a photo here</strong></p>
-        <p class="muted">or use <em>Choose photo</em> or <em>Sample picture</em> above</p>
+        <p class="muted">or use 📷 or 🌈 above</p>
+        <p class="muted how-to">Drag a piece to move it • Tap a piece to turn it • Pieces click into place when they fit</p>
       </div>
     </div>
 
@@ -52,18 +56,18 @@
 
   <div id="winOverlay" class="win-overlay" hidden>
     <canvas id="confetti"></canvas>
-    <div class="win-card">
+    <div class="win-card" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+      <button type="button" class="win-close" id="winCloseBtn" aria-label="Close and look at the puzzle">✕</button>
       <div class="win-emoji">🏆</div>
-      <h2>You did it!</h2>
+      <h2 id="winTitle">You did it!</h2>
       <p id="winText">Puzzle finished!</p>
       <div class="win-actions">
+        <button type="button" class="btn btn-ghost" id="viewBtn">🖼️ See my puzzle</button>
         <button type="button" class="btn btn-go" id="againBtn">🔁 Play again</button>
         <button type="button" class="btn btn-ghost" id="newPhotoBtn">📷 New photo</button>
       </div>
     </div>
   </div>
-
-  <p class="hint">Drag a piece to move it &nbsp;•&nbsp; Tap a piece to turn it &nbsp;•&nbsp; Pieces click into place when they fit</p>
 
   <script src="jigsaw.js"></script>
   <script src="pieces.js"></script>
