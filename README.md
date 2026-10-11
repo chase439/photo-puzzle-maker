@@ -2,7 +2,12 @@
 
 Turn any photo into a jigsaw puzzle that kids can drag, turn and snap together.
 
-## Run it
+**▶ Play it live: <https://chase439.github.io/photo-puzzle-maker/>**
+
+Works in any modern browser on a computer, tablet or phone. Your photo never
+leaves your device.
+
+## Run it locally
 
 Double-click `index.html` — that's it. No install, no build step, no internet.
 Everything (including your photo) stays on your computer.
